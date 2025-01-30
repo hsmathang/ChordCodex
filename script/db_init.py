@@ -3,6 +3,7 @@ from sqlalchemy.orm import sessionmaker
 from model import Chord, Base  # Import the Chord model and Base from your model file
 import os
 from dotenv import load_dotenv
+from config.db_config import get_db_config
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -11,14 +12,13 @@ def get_engine():
     """
     Create and return a SQLAlchemy engine using the connection details from .env.
     """
-    HOST = os.environ.get("DB_HOST")
-    PORT = os.environ.get("DB_PORT")
-    USER = os.environ.get("DB_USER")
-    PASSWORD = os.environ.get("DB_PASSWORD")
-    NAME = os.environ.get("DB_NAME")
-    
-    if not all([HOST, PORT, USER, PASSWORD, NAME]):
-        raise ValueError("Some database connection variables are missing in .env file.")
+    params = get_db_config()
+
+    HOST = params.get("DB_HOST")
+    PORT = params.get("DB_PORT")
+    USER = params.get("DB_USER")
+    PASSWORD = params.get("DB_PASSWORD")
+    NAME = params.get("DB_NAME")
     
     DATABASE_URL = f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{NAME}"
     return create_engine(DATABASE_URL, echo=True)

@@ -1,0 +1,3 @@
+SELECT *
+FROM chords
+LIMIT 10;
