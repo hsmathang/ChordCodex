@@ -1,13 +1,12 @@
 import os
 from dotenv import load_dotenv
-from pathlib import Path
 import pandas as pd
 import polars as pl
 from functools import wraps
 from chordcodex.model import DBConnection
 
 # =========================================
-# Decorators (updated with polars)
+# Decorators (unchanged)
 # =========================================
 def pandas_format(func):
     @wraps(func)
@@ -24,16 +23,16 @@ def polars_format(func):
     return wrapper
 
 # =========================================
-# QueryExecutor with Polars Method
+# Base Executor Class
 # =========================================
-class FileExecutor:
+class BaseExecutor:
     def __init__(self, **config):
         self.config = config
         self.conn = None
         if config:
             self.conn = DBConnection(**config)
 
-    def from_env(self, env_path = ".env"):
+    def from_env(self, env_path=".env"):
         load_dotenv(env_path)
         self.config = {
             "host": os.getenv("DB_HOST"),
@@ -45,31 +44,40 @@ class FileExecutor:
         self.conn = DBConnection(**self.config)
         return self
 
-    def as_raw(self, sql_file: str, params=None):
-        """Base method - returns raw results (list of dicts)."""
+    def as_raw(self, query, params=None):
+        """Execute SQL and return raw results (list of dicts)."""
         try:
-            sql_path = Path(sql_file)
-            if not sql_path.exists():
-                raise FileNotFoundError(f"SQL file not found: {sql_file}")
-            
-            with open(sql_path, 'r') as f:
-                query = f.read()
-
             with self.conn as cursor:
                 cursor.execute(query, params or ())
                 return cursor.fetchall() if cursor.description else []
-
         except Exception as e:
             raise RuntimeError(f"Query failed: {str(e)}")
 
-    # Pandas DataFrame
     @pandas_format
-    def as_pandas(self, sql_file: str, params=None):
+    def as_pandas(self, query, params=None):
         """Return results as pandas DataFrame."""
-        return self.as_raw(sql_file, params)
+        return self.as_raw(query, params)
 
-    # Polars DataFrame (replaces numpy array)
     @polars_format
-    def as_polars(self, sql_file: str, params=None):
+    def as_polars(self, query, params=None):
         """Return results as Polars DataFrame."""
-        return self.as_raw(sql_file, params)
+        return self.as_raw(query, params)
+
+# =========================================
+# FileExecutor for SQL Files
+# =========================================
+class FileExecutor(BaseExecutor):
+    def as_raw(self, sql_file: str, params=None):
+        """Execute SQL from a file and return raw results."""
+        try:
+            with open(sql_file, 'r') as f:
+                query = f.read()
+            return super().as_raw(query, params)
+        except Exception as e:
+            raise RuntimeError(f"Query failed: {str(e)}")
+
+# =========================================
+# QueryExecutor for SQL Strings
+# =========================================
+class QueryExecutor(BaseExecutor):
+    pass
