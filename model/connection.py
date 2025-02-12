@@ -4,9 +4,12 @@ from config.db_config import get_db_config
 
 class DBConnection:
     """Context manager for PostgreSQL connections using env vars."""
+    def __init__(self, **config):
+        self.config = config
+    
     def __enter__(self):
         self.conn = psycopg2.connect(
-            **get_db_config(),
+            **self.config,
             cursor_factory=RealDictCursor
         )
         self.cursor = self.conn.cursor()

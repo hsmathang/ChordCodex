@@ -1,11 +1,13 @@
+import os
+from dotenv import load_dotenv
 from pathlib import Path
 import pandas as pd
-import numpy as np
+import polars as pl
 from functools import wraps
 from model import DBConnection
 
 # =========================================
-# Decorators (unchanged)
+# Decorators (updated with polars)
 # =========================================
 def pandas_format(func):
     @wraps(func)
@@ -14,21 +16,36 @@ def pandas_format(func):
         return pd.DataFrame(raw_result)
     return wrapper
 
-def numpy_format(func):
+def polars_format(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         raw_result = func(*args, **kwargs)
-        if not raw_result:
-            return np.array([])
-        return np.array([list(row.values()) for row in raw_result])
+        return pl.DataFrame(raw_result)
     return wrapper
 
 # =========================================
-# QueryExecutor with Short Method Names
+# QueryExecutor with Polars Method
 # =========================================
 class QueryExecutor:
-    @staticmethod
-    def execute(sql_file: str, params=None):
+    def __init__(self, **config):
+        self.config = config
+        self.conn = None
+        if config:
+            self.conn = DBConnection(**config)
+
+    def from_env(self, env_path = ".env"):
+        load_dotenv(env_path)
+        self.config = {
+            "host": os.getenv("DB_HOST"),
+            "port": int(os.getenv("DB_PORT", "5432")),
+            "dbname": os.getenv("DB_NAME"),
+            "user": os.getenv("DB_USER"),
+            "password": os.getenv("DB_PASSWORD")
+        }
+        self.conn = DBConnection(**self.config)
+        return self
+
+    def as_raw(self, sql_file: str, params=None):
         """Base method - returns raw results (list of dicts)."""
         try:
             sql_path = Path(sql_file)
@@ -38,22 +55,21 @@ class QueryExecutor:
             with open(sql_path, 'r') as f:
                 query = f.read()
 
-            with DBConnection() as cursor:
+            with self.conn as cursor:
                 cursor.execute(query, params or ())
                 return cursor.fetchall() if cursor.description else []
 
         except Exception as e:
             raise RuntimeError(f"Query failed: {str(e)}")
 
-    # Shortened methods with decorators
-    @staticmethod
+    # Pandas DataFrame
     @pandas_format
-    def as_df(sql_file: str, params=None):
+    def as_pandas(self, sql_file: str, params=None):
         """Return results as pandas DataFrame."""
-        return QueryExecutor.execute(sql_file, params)
+        return self.as_raw(sql_file, params)
 
-    @staticmethod
-    @numpy_format
-    def as_array(sql_file: str, params=None):
-        """Return results as numpy array."""
-        return QueryExecutor.execute(sql_file, params)
+    # Polars DataFrame (replaces numpy array)
+    @polars_format
+    def as_polars(self, sql_file: str, params=None):
+        """Return results as Polars DataFrame."""
+        return self.as_raw(sql_file, params)
