@@ -26,7 +26,7 @@ def polars_format(func):
 # =========================================
 # QueryExecutor with Polars Method
 # =========================================
-class QueryExecutor:
+class FileExecutor:
     def __init__(self, **config):
         self.config = config
         self.conn = None

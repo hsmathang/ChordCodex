@@ -1,6 +1,6 @@
-from chordcodex.model import QueryExecutor
+from chordcodex.model import FileExecutor
 
-executor = QueryExecutor().from_env()
+executor = FileExecutor().from_env()
 
 # Pandas DataFrame
 pd_df = executor.as_pandas("sql/all.sql")
