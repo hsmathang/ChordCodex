@@ -41,6 +41,7 @@ class BaseExecutor:
             "user": os.getenv("DB_USER"),
             "password": os.getenv("DB_PASSWORD")
         }
+        print(self.config)
         self.conn = DBConnection(**self.config)
         return self
 
