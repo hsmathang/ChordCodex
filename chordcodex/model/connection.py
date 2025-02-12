@@ -1,6 +1,5 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from config.db_config import get_db_config
 
 class DBConnection:
     """Context manager for PostgreSQL connections using env vars."""

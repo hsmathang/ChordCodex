@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 import polars as pl
 from functools import wraps
-from model import DBConnection
+from chordcodex.model import DBConnection
 
 # =========================================
 # Decorators (updated with polars)

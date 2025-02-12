@@ -1,4 +1,4 @@
-from model import QueryExecutor
+from chordcodex.model import QueryExecutor
 
 executor = QueryExecutor().from_env()
 
