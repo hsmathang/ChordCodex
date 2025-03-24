@@ -3,16 +3,12 @@ from sqlalchemy.orm import sessionmaker
 from model import Chord, Base  # Import the Chord model and Base from your model file
 import os
 from dotenv import load_dotenv
-from config.db_config import get_db_config
 
-# Load environment variables from the .env file
-load_dotenv()
-
-def get_engine():
+def get_engine(env_file: str=".env"):
     """
     Create and return a SQLAlchemy engine using the connection details from .env.
     """
-    params = get_db_config()
+    params = load_dotenv(env_file)
 
     HOST = params.get("DB_HOST")
     PORT = params.get("DB_PORT")
