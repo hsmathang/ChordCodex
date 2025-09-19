@@ -1,5 +1,5 @@
 from sqlalchemy import inspect, text
-from db_init import get_engine  # Use get_engine to connect to the database
+from .db_init import get_engine  # Use get_engine to connect to the database
 from sqlalchemy.orm import sessionmaker
 
 def get_table_info(engine, table_name):

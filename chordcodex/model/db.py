@@ -15,7 +15,7 @@ class Chord(Base):
     octave = Column(Integer, nullable=False)  # Octave of the chord
     frequencies = Column(ARRAY(Float), nullable=False)  # Frequencies of the notes
     chroma = Column(ARRAY(Integer), nullable=False)  # Chroma vector
-    tag = Column(String, nullable=False)  # Generation tag
+    tag = Column(ARRAY(String), nullable=True)  # Generation tag
     code = Column(String, nullable=True, unique=True)  # Unique chord code
 
 # Names table
